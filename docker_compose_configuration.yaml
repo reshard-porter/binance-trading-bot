@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  trading-bot:
+    build: .
+    container_name: binance-telegram-bot
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./sessions:/app/sessions
+    env_file:
+      - .env

@@ -1,0 +1,12 @@
+# Security
+.env
+sessions/
+
+# Virtual Environments
+.venv/
+__pycache__/
+
+# Local Databases and Logs
+data/
+logs/
+*.db
