@@ -28,6 +28,7 @@ class TradeDB(Base):
 
 class Database:
     def __init__(self):
+        os.makedirs('data', exist_ok=True)
         db_url = os.getenv("DB_URL", "sqlite:///data/trades.db")
         self.engine = create_engine(db_url)
         Base.metadata.create_all(self.engine)
