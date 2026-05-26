@@ -32,33 +32,34 @@ class BinanceClient:
         except Exception as e:
             logger.error(f"Failed to initialize Binance client: {e}")
             raise
-            
+
     def get_account_info(self) -> Dict:
         """Get account balance and information"""
         try:
             account = self.client.get_account()
-            
+
             total_equity = 0.0
             for balance in account['balances']:
                 asset = balance['asset']
                 free = float(balance['free'])
                 locked = float(balance['locked'])
-                
+
                 if free > 0 or locked > 0:
                     if asset != 'USDT':
                         try:
                             symbol = f"{asset}USDT"
-                            price = self.get_current_price(symbol)
+                            # Pass silent=True so we don't log Testnet dust errors
+                            price = self.get_current_price(symbol, silent=True)
                             total_equity += (free + locked) * price
                         except:
                             pass
                     else:
                         total_equity += free + locked
-                        
+
             usdt_balance = float(next(
                 (b['free'] for b in account['balances'] if b['asset'] == 'USDT'), 0
             ))
-            
+
             return {
                 'total_equity': total_equity,
                 'available_balance': usdt_balance,
@@ -70,14 +71,16 @@ class BinanceClient:
         except BinanceAPIException as e:
             logger.error(f"API Error getting account info: {e}")
             return {}
-            
-    def get_current_price(self, symbol: str) -> float:
+
+    def get_current_price(self, symbol: str, silent: bool = False) -> float:
         """Get current price for symbol"""
         try:
             ticker = self.client.get_symbol_ticker(symbol=symbol)
             return float(ticker['price'])
         except Exception as e:
-            logger.error(f"Error getting price for {symbol}: {e}")
+            # -1121 is the invalid symbol error. Only log it if we didn't ask it to be silent.
+            if not (silent and "-1121" in str(e)):
+                logger.error(f"Error getting price for {symbol}: {e}")
             return 0.0
             
     def get_klines(self, symbol: str, interval: str, limit: int = 100) -> pd.DataFrame:
