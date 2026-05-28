@@ -1,6 +1,5 @@
 # Security
 .env
-sessions/
 
 # Virtual Environments
 .venv/

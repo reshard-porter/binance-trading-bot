@@ -1,41 +1,21 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import subprocess
 from database import Database
 from config import Config
 from binance_client import BinanceClient
+import MetaTrader5 as mt5
 import utils
 
-st.set_page_config(page_title="Binance Signal Bot", layout="wide", page_icon="📈")
+st.set_page_config(page_title="Unified Trading Dashboard", layout="wide", page_icon="📈")
+st.title("🤖 Unified Dual-Engine Dashboard")
 
-# --- THE CLOUD HACK: Run Telegram Listener in Background ---
-@st.cache_resource
-def start_bot_daemon():
-    """Starts the Telegram listener in the background on the Streamlit server"""
-    try:
-        process = subprocess.Popen(["python", "telegram_listener.py"])
-        return True
-    except Exception as e:
-        return str(e)
-
-daemon_status = start_bot_daemon()
-
-st.title("🤖 Automated Trading Dashboard")
-
-if daemon_status is True:
-    st.success("🟢 Background Trading Daemon is Active (Cloud Mode)")
-else:
-    st.error(f"🔴 Failed to start background daemon: {daemon_status}")
-
-# 1. Initialize Database
+# 1. Initialize Clients
 try:
     db = Database()
 except Exception as e:
     st.error(f"Database Error: {e}")
     st.stop()
 
-# 2. Safely Connect to Binance
 @st.cache_resource
 def get_binance_client():
     try:
@@ -43,62 +23,93 @@ def get_binance_client():
     except Exception as e:
         return str(e)
 
-with st.spinner("Syncing with Binance Testnet..."):
+@st.cache_resource
+def init_mt5():
+    if not mt5.initialize():
+        return f"MT5 Init Failed: {mt5.last_error()}"
+    return True
+
+with st.spinner("Syncing with Binance and MetaTrader 5..."):
     binance = get_binance_client()
+    mt5_status = init_mt5()
 
-if isinstance(binance, str):
-    st.error(f"⚠️ Binance Connection Error: {binance}")
-    st.stop()
+# --- THE UNIFIED TABS ---
+tab1, tab2 = st.tabs(["🟢 Binance (Crypto)", "🔵 MetaTrader 5 (Forex & Indices)"])
 
-# --- METRICS ROW ---
-try:
-    trades = db.get_all_trades()
-    df = pd.DataFrame([{
-        'id': t.id, 'symbol': t.symbol, 'side': t.side, 'entry_price': t.entry_price,
-        'quantity': t.quantity, 'quote_quantity': t.quote_quantity, 'status': t.status.name,
-        'open_time': t.open_time, 'pnl': t.pnl, 'source': t.source_name
-    } for t in trades]) if trades else pd.DataFrame()
-except Exception as e:
-    st.error(f"Failed to read trades: {e}")
-    df = pd.DataFrame()
-
-col1, col2, col3, col4 = st.columns(4)
-
-try:
-    account = binance.get_account_info()
-    equity = account.get('total_equity', Config.TOTAL_CAPITAL_USDT)
-except Exception as e:
-    st.warning(f"Could not fetch live balance: {e}")
-    equity = Config.TOTAL_CAPITAL_USDT
-
-with col1:
-    st.metric("Total Equity (USDT)", utils.format_currency(equity))
-with col2:
-    st.metric("Total Trades Executed", len(df) if not df.empty else 0)
-with col3:
-    win_rate = 0.0
-    if not df.empty and 'pnl' in df.columns:
-        closed = df.dropna(subset=['pnl'])
-        if len(closed) > 0:
-            wins = len(closed[closed['pnl'] > 0])
-            win_rate = (wins / len(closed)) * 100
-    st.metric("Win Rate", utils.format_percentage(win_rate))
-with col4:
-    total_pnl = df['pnl'].sum() if not df.empty and 'pnl' in df.columns else 0.0
-    st.metric("Total PNL", utils.format_currency(total_pnl))
-
-# --- ACTIVE TRADES ---
-st.subheader("🟢 Active Open Positions")
-if not df.empty:
-    active = df[df['status'] == 'FILLED']
-    if not active.empty:
-        st.dataframe(active[['symbol', 'side', 'entry_price', 'quantity', 'quote_quantity', 'source', 'open_time']], use_container_width=True)
+# ==========================================
+# TAB 1: BINANCE (CRYPTO)
+# ==========================================
+with tab1:
+    st.subheader("Binance Testnet Status")
+    
+    if isinstance(binance, str):
+        st.error(f"⚠️ Binance Connection Error: {binance}")
     else:
-        st.info("No active trades currently open.")
-else:
-    st.info("System has no trade history.")
+        try:
+            trades = db.get_all_trades()
+            df = pd.DataFrame([{
+                'symbol': t.symbol, 'side': t.side, 'entry': t.entry_price,
+                'status': t.status.name, 'pnl': t.pnl
+            } for t in trades]) if trades else pd.DataFrame()
+            
+            account = binance.get_account_info()
+            equity = account.get('total_equity', Config.TOTAL_CAPITAL_USDT)
+            
+            b_col1, b_col2, b_col3 = st.columns(3)
+            b_col1.metric("Binance Equity (USDT)", utils.format_currency(equity))
+            b_col2.metric("Total Executed Trades", len(df) if not df.empty else 0)
+            
+            total_pnl = df['pnl'].sum() if not df.empty and 'pnl' in df.columns else 0.0
+            b_col3.metric("Total PNL", utils.format_currency(total_pnl))
+            
+            st.markdown("### 🟢 Active Binance Positions")
+            if not df.empty:
+                active = df[df['status'] == 'FILLED']
+                if not active.empty:
+                    st.dataframe(active, use_container_width=True)
+                else:
+                    st.info("No active crypto trades currently open.")
+            else:
+                st.info("No crypto trade history.")
+        except Exception as e:
+            st.warning(f"Could not load Binance data: {e}")
 
-# --- TRADE HISTORY ---
-st.subheader("📚 Trade History")
-if not df.empty:
-    st.dataframe(df, use_container_width=True)
+# ==========================================
+# TAB 2: METATRADER 5 (FOREX)
+# ==========================================
+with tab2:
+    st.subheader("MetaTrader 5 Live Status")
+    
+    if mt5_status is not True:
+        st.error(f"⚠️ MetaTrader 5 Connection Error: {mt5_status}")
+    else:
+        account_info = mt5.account_info()
+        if account_info:
+            m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+            m_col1.metric("MT5 Live Equity", utils.format_currency(account_info.equity))
+            m_col2.metric("MT5 Balance", utils.format_currency(account_info.balance))
+            m_col3.metric("Free Margin", utils.format_currency(account_info.margin_free))
+            m_col4.metric("Leverage", f"1:{account_info.leverage}")
+            
+            st.markdown("### 🔵 Active MT5 Positions")
+            positions = mt5.positions_get()
+            
+            if positions:
+                # Format live MT5 trades into a clean table
+                pos_data = [{
+                    'Ticket': p.ticket,
+                    'Symbol': p.symbol,
+                    'Type': 'BUY' if p.type == 0 else 'SELL',
+                    'Volume/Lots': p.volume,
+                    'Entry Price': p.price_open,
+                    'Current Price': p.price_current,
+                    'Stop Loss': p.sl,
+                    'Take Profit': p.tp,
+                    'Live PNL': utils.format_currency(p.profit)
+                } for p in positions]
+                
+                st.dataframe(pd.DataFrame(pos_data), use_container_width=True)
+            else:
+                st.info("No active forex trades currently open.")
+        else:
+            st.warning("Could not fetch MT5 account info. Ensure the terminal is open and logged in.")

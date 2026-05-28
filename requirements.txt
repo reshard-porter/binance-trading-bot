@@ -1,9 +1,17 @@
+# Crypto & Forex APIs
 python-binance
+MetaTrader5
+
+# Telegram Signal Catcher
 telethon
+
+# Dashboard & UI
 streamlit
 pandas
 numpy
 plotly
+
+# Trading & Database Utilities
 ta
 python-dotenv
 SQLAlchemy

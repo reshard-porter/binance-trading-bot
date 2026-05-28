@@ -1,0 +1,64 @@
+2026-05-26 06:05:26,940 - config - INFO - Initializing System Components...
+2026-05-26 06:05:27,227 - config - INFO - Binance Testnet client initialized
+2026-05-26 06:05:27,228 - config - INFO - Connecting to Telegram. Monitoring 16 channels...
+2026-05-26 06:05:27,228 - telethon.network.mtprotosender - INFO - Connecting to 149.154.167.92:443/TcpFull...
+2026-05-26 06:05:27,360 - telethon.network.mtprotosender - INFO - Connection to 149.154.167.92:443/TcpFull complete!
+Traceback (most recent call last):
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/telegram_listener.py", line 119, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/telegram_listener.py", line 112, in main
+    await client.start(phone=Config.TELEGRAM_PHONE)
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/client/auth.py", line 135, in _start
+    await self.connect()
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/client/telegrambaseclient.py", line 571, in connect
+    self.session.auth_key = self._sender.auth_key
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/sessions/sqlite.py", line 191, in auth_key
+    self._update_session_table()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/sessions/sqlite.py", line 210, in _update_session_table
+    c.execute('delete from sessions')
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+2026-05-26 06:18:02,400 - config - INFO - Initializing System Components...
+2026-05-26 06:18:02,619 - config - INFO - Binance Testnet client initialized
+2026-05-26 06:18:02,620 - config - INFO - Connecting to Telegram. Monitoring 16 channels...
+2026-05-26 06:18:02,620 - telethon.network.mtprotosender - INFO - Connecting to 149.154.167.92:443/TcpFull...
+2026-05-26 06:18:02,745 - telethon.network.mtprotosender - INFO - Connection to 149.154.167.92:443/TcpFull complete!
+Traceback (most recent call last):
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/telegram_listener.py", line 119, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/telegram_listener.py", line 112, in main
+    await client.start(phone=Config.TELEGRAM_PHONE)
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/client/auth.py", line 135, in _start
+    await self.connect()
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/client/telegrambaseclient.py", line 571, in connect
+    self.session.auth_key = self._sender.auth_key
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/sessions/sqlite.py", line 191, in auth_key
+    self._update_session_table()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/reshardporter/Desktop/Python Projects/Binance/.venv/lib/python3.14/site-packages/telethon/sessions/sqlite.py", line 210, in _update_session_table
+    c.execute('delete from sessions')
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
